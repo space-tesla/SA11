@@ -1,0 +1,131 @@
+Slip 11b 
+Q2 Run some python programs on Pi like: 
+Light an LED through Python program 
+Get input from two switches and switch on corresponding LEDs 
+Flash an LED at a given ON time and OFF time cycle, where the two times are 
+taken from a file 
+import RPi.GPIO as GPIO 
+import time 
+GPIO.setmode(GPIO.BCM) 
+# Pin setup (common for all) 
+LED_MAIN = 18 
+SW1 = 17 
+SW2 = 27 
+LED1 = 22 
+LED2 = 23 
+# ------------------------------- 
+# Program 1: Light a single LED 
+# ------------------------------- 
+def light_single_led(): 
+    GPIO.setup(LED_MAIN, GPIO.OUT) 
+ 
+    print("\n--- PROGRAM 1: Light LED ---") 
+    print("LED ON for 5 seconds...") 
+    GPIO.output(LED_MAIN, GPIO.HIGH) 
+    time.sleep(5) 
+ 
+    print("LED OFF") 
+    GPIO.output(LED_MAIN, GPIO.LOW) 
+ 
+ 
+# --------------------------------------------------------- 
+# Program 2: Two switches control two corresponding LEDs 
+# --------------------------------------------------------- 
+def switch_control_leds(): 
+    print("\n--- PROGRAM 2: Switches control LEDs ---") 
+ 
+    GPIO.setup(SW1, GPIO.IN, pull_up_down=GPIO.PUD_UP) 
+    GPIO.setup(SW2, GPIO.IN, pull_up_down=GPIO.PUD_UP) 
+    GPIO.setup(LED1, GPIO.OUT) 
+    GPIO.setup(LED2, GPIO.OUT) 
+ 
+    print("Press CTRL+C to exit") 
+ 
+    try: 
+        while True: 
+            # Switch 1 
+            if GPIO.input(SW1) == GPIO.LOW: 
+                GPIO.output(LED1, GPIO.HIGH) 
+            else: 
+                GPIO.output(LED1, GPIO.LOW) 
+ 
+            # Switch 2 
+            if GPIO.input(SW2) == GPIO.LOW: 
+                GPIO.output(LED2, GPIO.HIGH) 
+            else: 
+                GPIO.output(LED2, GPIO.LOW) 
+ 
+            time.sleep(0.1) 
+ 
+    except KeyboardInterrupt: 
+        GPIO.output(LED1, GPIO.LOW) 
+        GPIO.output(LED2, GPIO.LOW) 
+        print("\nProgram exited") 
+ 
+ 
+# ------------------------------------------------------ 
+# Program 3: Flash LED with timing from file 
+# ------------------------------------------------------ 
+def flash_led_from_file(): 
+    print("\n--- PROGRAM 3: Flash LED using ON/OFF times from file ---") 
+ 
+    GPIO.setup(LED_MAIN, GPIO.OUT) 
+ 
+    # Read from file 
+    try: 
+        with open("timing.txt", "r") as file: 
+            on_time = float(file.readline().strip()) 
+            off_time = float(file.readline().strip()) 
+    except: 
+        print("Error: timing.txt not found or invalid format") 
+        return 
+ 
+    print(f"Flashing LED → ON={on_time}s, OFF={off_time}s") 
+    print("Press CTRL+C to stop") 
+ 
+    try: 
+        while True: 
+            GPIO.output(LED_MAIN, GPIO.HIGH) 
+            time.sleep(on_time) 
+ 
+            GPIO.output(LED_MAIN, GPIO.LOW) 
+            time.sleep(off_time) 
+ 
+    except KeyboardInterrupt: 
+        GPIO.output(LED_MAIN, GPIO.LOW) 
+        print("\nStopped flashing LED") 
+ 
+ 
+# ------------------------------- 
+# MAIN MENU 
+# ------------------------------- 
+def main_menu(): 
+    while True: 
+        print("\n========== SLIP 11 - Q2 ==========") 
+        print("1. Light an LED") 
+        print("2. Control LEDs using two switches") 
+        print("3. Flash LED using ON/OFF time from file") 
+        print("4. Exit") 
+        print("===================================") 
+ 
+        ch = input("Enter your choice: ") 
+ 
+        if ch == "1": 
+            light_single_led() 
+        elif ch == "2": 
+            switch_control_leds() 
+        elif ch == "3": 
+            flash_led_from_file() 
+        elif ch == "4": 
+            print("Exiting...") 
+            GPIO.cleanup() 
+            break 
+        else: 
+            print("Invalid choice! Try again.") 
+ 
+ 
+# Run the menu 
+try: 
+    main_menu() 
+except: 
+    GPIO.cleanup() 
